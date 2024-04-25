@@ -1,0 +1,4 @@
+Bio==1.7.0
+gigachain==0.1.16
+streamlit==1.33.0
+streamlit-tags==1.2.8

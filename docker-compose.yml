@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  myservice:
+    build: .
+    ports:
+      - "8501:8501"
+    restart: always
+    environment:
+      GIGACHAT_TOKEN: ${GIGACHAT_TOKEN}
