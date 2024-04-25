@@ -1,8 +1,12 @@
+import io
 import os
+import json
 import streamlit as st
 from langchain.chat_models.gigachat import GigaChat
 from langchain.schema import HumanMessage
 from langchain_core.messages import AIMessage
+
+from services import create_ical
 
 st.title("Научный конденсатор")
 
@@ -28,15 +32,32 @@ if st.session_state.messages:
             st.markdown(last_assistant_message["content"])
 
 if prompt := st.chat_input("What is up?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    try:
+        test = json.loads(prompt)
+        ical_data = create_ical(test)
 
-    with st.chat_message("assistant"):
-        stream = llm.invoke([
-            HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"])
-            for m in st.session_state.messages
-        ]
+        # Пишем данные в объект BytesIO
+        ical_stream = io.BytesIO(ical_data)
+
+        # Предлагаем пользователю скачать файл
+
+        st.download_button(
+            label="Скачать iCal файл",
+            data=ical_stream,
+            file_name="event.ics",
+            mime="text/calendar"
         )
-        response = st.markdown(stream.content)
-    st.session_state.messages.append({"role": "assistant", "content": stream.content})
+    except Exception as e:
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            stream = llm.invoke([
+                HumanMessage(content=m["content"]) if m["role"] == "user" else AIMessage(content=m["content"])
+                for m in st.session_state.messages
+            ]
+            )
+            response = st.markdown(stream.content)
+        st.session_state.messages.append({"role": "assistant", "content": stream.content})
+
