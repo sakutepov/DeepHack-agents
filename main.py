@@ -4,10 +4,6 @@ from langchain.chat_models.gigachat import GigaChat
 from langchain.schema import HumanMessage
 from langchain_core.messages import AIMessage
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 st.title("Научный конденсатор")
 
 llm = GigaChat(credentials=os.getenv('GIGACHAT_TOKEN'),
