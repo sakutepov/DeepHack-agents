@@ -29,6 +29,8 @@ class PubmedAPI:
         return records
 
     def parse_record(self, rec_id, record):
+        if len(record.get('PubmedArticle', None)) == 0:
+            return {'id': '', 'title': '', 'journal': '', 'abstract': ''}    
         title = record.get('PubmedArticle', None)[0].get('MedlineCitation', None).get('Article', None).get(
             'ArticleTitle', None)
         journal = record.get('PubmedArticle', None)[0].get('MedlineCitation', None).get('Article', None).get('Journal',
