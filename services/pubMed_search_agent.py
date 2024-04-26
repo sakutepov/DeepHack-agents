@@ -1,26 +1,24 @@
-import services.pubmed_api as pubmed_api
+from langchain.chains import LLMChain, StuffDocumentsChain
 from langchain.schema import HumanMessage
+from langchain_community.document_transformers import LongContextReorder
 from langchain_community.embeddings.gigachat import GigaChatEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_community.document_transformers import (
-    LongContextReorder,
-)
 from langchain_core.prompts import PromptTemplate
-from langchain.chains import LLMChain, StuffDocumentsChain
 
+import services.pubmed_api as pubmed_api
 
 
 class PubMedSearchAgent:
     def __init__(self, llm):
-        self.llm           = llm
-        self.pubmedAPI     = pubmed_api.PubmedAPI()
-        
+        self.llm = llm
+        self.pubmedAPI = pubmed_api.PubmedAPI()
+
     def translate_text(self, text, target_lang):
         # Assuming we have a method in OpenAI to perform translation
         prompt = f"Translate the following text to {target_lang}: {text}"
         response = self.llm.invoke(prompt)
         return response.content.strip()
-    
+
     def process_user_input(self, user_input):
         # Создание промпта для LLM, который преобразует вопрос пользователя в поисковые запросы для PubMed
         prompt = (
@@ -40,15 +38,14 @@ class PubMedSearchAgent:
             text = text.replace(char, '')
         return text
 
-
     def parse_model_output(self, output):
         # Парсинг выходных данных LLM для извлечения ключевых слов
         lines = output.split('\n')
         keyword_lists = []
         for line in lines:
             clean_line = line.strip().split('. ')[-1]
-            #keywords = [format_fields(self.del_spec_chars(keyword).strip(), search_fields)  for keyword in clean_line.split(',')]
-            keywords = [self.del_spec_chars(keyword).strip()  for keyword in clean_line.split(',')]
+            # keywords = [format_fields(self.del_spec_chars(keyword).strip(), search_fields)  for keyword in clean_line.split(',')]
+            keywords = [self.del_spec_chars(keyword).strip() for keyword in clean_line.split(',')]
             keyword_lists.extend(keywords)
         return list(set(keyword_lists))
 
@@ -59,24 +56,25 @@ class PubMedSearchAgent:
         Generated search query:
         '''
         return self.llm.invoke([HumanMessage(content=prompt)]).content
-    
+
     def execute_queries(self, api_query):
         results = self.pubmedAPI.get_articles(api_query)
-        return [ self.pubmedAPI.parse_record(one_pub['id'], one_pub['data'])['abstract'] for one_pub in results]
+        return [self.pubmedAPI.parse_record(one_pub['id'], one_pub['data'])['abstract'] for one_pub in results]
 
     def is_russian(self, text):
         return any(char in 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя' for char in text.lower())
 
-    def process_query (self, user_query):
+    def process_query(self, user_query):
         keyword_lists, lang = self.process_user_input(user_query)
         api_query = self.get_query_by_keywords(user_query, keyword_lists)
         search_results = self.execute_queries(api_query)
 
         texts = []
-        for result in search_results: #.items(): #query_num
+        for result in search_results:  # .items(): #query_num
             texts.append(result)
 
-        embeddings = GigaChatEmbeddings(credentials=self.llm.credentials, scope='GIGACHAT_API_CORP', verify_ssl_certs=False)
+        embeddings = GigaChatEmbeddings(credentials=self.llm.credentials, scope='GIGACHAT_API_CORP',
+                                        verify_ssl_certs=False)
         retriever = FAISS.from_texts(texts, embedding=embeddings).as_retriever(
             search_kwargs={"k": 10}
         )
@@ -115,9 +113,9 @@ class PubMedSearchAgent:
         else:
             return answer
 
+
 def test_PubMedSearchAgent(llm):
-        user_query = 'Что нового в лечении рака груди?'
-        pma = PubMedSearchAgent(llm)
-        op = pma.process_query(user_query)
-        print(op)
-        
+    user_query = 'Что нового в лечении рака груди?'
+    pma = PubMedSearchAgent(llm)
+    op = pma.process_query(user_query)
+    print(op)

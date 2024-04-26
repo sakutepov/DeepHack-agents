@@ -2,5 +2,9 @@ Bio==1.7.0
 gigachain==0.1.16
 streamlit==1.33.0
 streamlit-tags==1.2.8
-pytz~=2023.3.post1
+pytz==2024.1
 icalendar~=5.0.12
+pandas==2.2.2
+requests==2.31.0
+beautifulsoup4==4.12.3
+faiss-cpu==1.8.0
