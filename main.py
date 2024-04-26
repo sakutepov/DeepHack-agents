@@ -3,6 +3,7 @@ import os
 
 import streamlit as st
 from langchain.chat_models.gigachat import GigaChat
+from langchain_core.messages import HumanMessage, AIMessage
 
 from services import ConferenceAgent, PubMedSearchAgent, create_ical
 
@@ -31,20 +32,19 @@ if st.session_state.messages:
         with st.chat_message(last_assistant_message["role"]):
             st.markdown(last_assistant_message["content"])
 
-if prompt := st.chat_input("What is up?"):
+if prompt := st.chat_input("Что нового в медицине?"):
     with st.chat_message("user"):
         st.markdown(prompt)
-    with st.spinner('Собираю всю нужную информацию для ответа...'):
-        assistant_responce = ""
-        pubMed_info = pma.process_query(prompt)
-        conf_info = ca.process_query(prompt)
-        assistant_responce += pubMed_info
-        if conf_info[0] != '':
-            assistant_responce += '\n\n\n' + conf_info[0]
-        print('output test: ', assistant_responce)
-    st.success('Done!')
     with st.chat_message("assistant"):
-
+        assistant_responce = ""
+        with st.spinner('Собираю всю нужную информацию для ответа...'):
+            pubMed_info = pma.process_query(prompt)
+            conf_info = ca.process_query(prompt)
+            assistant_responce += pubMed_info
+            if conf_info[0] != '':
+                assistant_responce += '\n\n\n' + conf_info[0]
+            print('output test: ', assistant_responce)
+        st.success('Done!')
         response = st.markdown(assistant_responce)
     st.session_state.messages.append({"role": "assistant", "content": assistant_responce})
 
