@@ -42,7 +42,7 @@ if st.session_state.messages:
             st.markdown(last_assistant_message["content"])
 
 if prompt := st.chat_input("What is up?"):
-    if True: #try:
+    try:
         with st.chat_message("user"):
             st.markdown(prompt)
         with st.spinner('Собираю всю нужную информацию для ответа...'):
@@ -74,7 +74,7 @@ if prompt := st.chat_input("What is up?"):
                 file_name="event.ics",
                 mime="text/calendar"
             )
-    else: #except Exception as e:
+    except Exception as e:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
